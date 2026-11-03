@@ -1,86 +1,303 @@
-
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>The Science of Magenta</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#fbf8fb">
+  <meta name="description" content="Magenta uses AI agents and customer twins to simulate consumer behavior, evaluate product changes, and help teams decide what deserves real-world testing.">
+  <title>Magenta — Know what your customers want</title>
   <style>
-    body {
-      margin: 0;
-      height: 100vh;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      font-family: system-ui, sans-serif;
-      color: white;
-      text-align: center;
-      background: linear-gradient(135deg, red, limegreen, magenta);
-      background-size: 300% 300%;
-      animation: chaos 6s ease infinite;
+    :root {
+      --ink:#211522; --muted:#716675; --pink:#d51a8a; --pink-dark:#a90e69;
+      --pale:#f8eaf3; --line:#eadfe8; --paper:#fff; --wash:#fbf8fb;
+      --plum:#241326; --plum2:#321a30; --green:#d8f2e4; --shadow:0 22px 70px rgba(49,20,43,.10);
+      --radius:22px; --max:1160px;
     }
-
-    @keyframes chaos {
-      0% { background-position: 0% 50%; }
-      50% { background-position: 100% 50%; }
-      100% { background-position: 0% 50%; }
+    *{box-sizing:border-box} html{scroll-behavior:smooth}
+    body{margin:0;background:var(--wash);color:var(--ink);font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;line-height:1.55}
+    a{color:inherit;text-decoration:none} button{font:inherit}
+    .wrap{width:min(var(--max),calc(100% - 48px));margin:auto}
+    .nav{height:78px;display:flex;align-items:center;justify-content:space-between}
+    .brand{display:flex;align-items:center;gap:11px;font-size:19px;font-weight:850;letter-spacing:-.055em}
+    .mark{width:13px;height:13px;border-radius:4px;background:var(--pink);box-shadow:7px 0 0 #f4b3d9,0 7px 0 #8c1d70}
+    .navlinks{display:flex;align-items:center;gap:30px;color:#625766;font-size:13px;font-weight:650}
+    .navlinks a:hover{color:var(--pink-dark)}
+    .button{display:inline-flex;align-items:center;justify-content:center;gap:10px;border:1px solid transparent;border-radius:999px;padding:13px 20px;font-size:13px;font-weight:750;transition:.2s ease;cursor:pointer}
+    .button.primary{background:var(--pink);color:white;box-shadow:0 8px 22px rgba(213,26,138,.18)}
+    .button.primary:hover{background:var(--pink-dark);transform:translateY(-1px)}
+    .button.ghost{border-color:#d9cbd7;background:#fff;color:var(--ink)}
+    .button.ghost:hover{border-color:var(--pink);color:var(--pink-dark)}
+    .hero{padding:74px 0 78px;position:relative;overflow:hidden}
+    .hero:before{content:"";position:absolute;width:580px;height:580px;border-radius:50%;right:-170px;top:-180px;background:radial-gradient(circle,rgba(233,119,184,.19),rgba(233,119,184,0) 68%);pointer-events:none}
+    .hero-grid{display:grid;grid-template-columns:.92fr 1.08fr;gap:55px;align-items:center;position:relative}
+    .eyebrow{display:inline-flex;align-items:center;gap:9px;color:var(--pink-dark);font-size:11px;font-weight:850;letter-spacing:.14em;text-transform:uppercase}
+    .eyebrow:before{content:"";height:1px;width:22px;background:currentColor}
+    h1{font-size:clamp(43px,5.4vw,70px);line-height:1.02;letter-spacing:-.067em;margin:22px 0 22px;font-weight:800;max-width:620px}
+    h1 em{font-style:normal;color:var(--pink)}
+    .lead{font-size:18px;line-height:1.65;color:#665a69;max-width:520px;margin:0 0 28px}
+    .hero-actions{display:flex;gap:12px;flex-wrap:wrap}
+    .micro{font-size:11px;color:#8b7e8e;margin-top:17px}
+    .hero-visual{position:relative}
+    .dashboard{border:1px solid #eadfe8;border-radius:17px;background:#fff;box-shadow:var(--shadow);overflow:hidden;transform:rotate(1deg)}
+    .dash-top{height:42px;border-bottom:1px solid #f0e9ef;display:flex;align-items:center;justify-content:space-between;padding:0 15px;font-size:10px;color:#887c89}
+    .dash-brand{font-weight:800;color:#322433;display:flex;gap:8px;align-items:center}
+    .tiny-mark{height:8px;width:8px;border-radius:2px;background:var(--pink)}
+    .dash-body{padding:18px}
+    .dash-title{font-size:17px;font-weight:800;letter-spacing:-.04em}
+    .dash-sub{font-size:10px;color:#938896;margin-top:3px}
+    .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin:17px 0}
+    .stat{padding:12px;border:1px solid #f0e9ef;border-radius:9px}
+    .stat small{display:block;color:#8b7f8c;font-size:9px}
+    .stat strong{display:block;font-size:21px;letter-spacing:-.05em;margin-top:3px}
+    .stat strong span{font-size:10px;color:#15935c;letter-spacing:0}
+    .dash-table{border:1px solid #f0e9ef;border-radius:9px;overflow:hidden}
+    .dash-row{display:grid;grid-template-columns:1.45fr .8fr .65fr .7fr;gap:8px;padding:10px 11px;border-bottom:1px solid #f3edf2;font-size:9px;color:#615664;align-items:center}
+    .dash-row:last-child{border:0}.dash-row.head{background:#fcf9fc;color:#9a8e9b;font-size:8px;text-transform:uppercase;letter-spacing:.07em}
+    .pill{display:inline-flex;padding:3px 7px;border-radius:99px;background:#eaf7ef;color:#16804b;font-size:8px;font-weight:750;white-space:nowrap}
+    .pill.pink{background:#fae8f3;color:#b31b73}
+    .floating{position:absolute;bottom:-28px;left:-32px;background:#fff;border:1px solid #eee2eb;border-radius:13px;padding:13px 16px;box-shadow:0 12px 35px rgba(49,20,43,.10);font-size:10px;color:#6d6070}
+    .floating b{display:block;color:#281b2a;font-size:14px;margin-top:2px}
+    section{padding:88px 0}
+    .section-head{max-width:690px;margin-bottom:38px}
+    .section-head h2{font-size:clamp(32px,4vw,48px);line-height:1.08;letter-spacing:-.06em;margin:14px 0}
+    .section-head p{font-size:16px;color:var(--muted);margin:0;max-width:620px}
+    .problem{background:#fff;border-top:1px solid #f0e8ef;border-bottom:1px solid #f0e8ef}
+    .problem-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+    .problem-card{border:1px solid var(--line);border-radius:15px;padding:21px;background:#fff}
+    .problem-card .num{font-size:11px;color:var(--pink);font-weight:850;letter-spacing:.1em}
+    .problem-card h3{font-size:16px;letter-spacing:-.03em;margin:17px 0 8px}
+    .problem-card p{font-size:13px;color:var(--muted);margin:0;line-height:1.6}
+    .statement{background:var(--plum);color:#fff;padding:64px 0}
+    .statement-inner{display:flex;align-items:center;justify-content:space-between;gap:40px}
+    .statement h2{font-size:clamp(27px,3.5vw,42px);line-height:1.12;letter-spacing:-.055em;max-width:790px;margin:0}
+    .statement h2 span{color:#f18bc6}
+    .statement .aside{font-size:12px;color:#d2c1d1;max-width:190px;flex-shrink:0}
+    .steps{display:grid;grid-template-columns:repeat(3,1fr);gap:15px}
+    .step{border:1px solid var(--line);border-radius:18px;padding:23px;background:#fff;min-height:230px}
+    .step-no{color:var(--pink);font-size:11px;font-weight:850;letter-spacing:.12em}
+    .step h3{font-size:22px;letter-spacing:-.05em;margin:24px 0 8px}
+    .step p{font-size:13px;color:var(--muted);margin:0}
+    .step .tag{display:inline-block;margin-top:22px;background:var(--pale);color:var(--pink-dark);padding:6px 9px;border-radius:7px;font-size:10px;font-weight:750}
+    .product{background:#f6f0f5}
+    .product-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;align-items:stretch}
+    .product-card{background:#fff;border:1px solid #eadfe8;border-radius:17px;overflow:hidden}
+    .product-card img{display:block;width:100%;height:auto}
+    .product-copy{padding:19px 21px 22px}
+    .product-copy h3{font-size:17px;letter-spacing:-.035em;margin:0 0 6px}
+    .product-copy p{font-size:12px;color:var(--muted);margin:0}
+    .video-wrap{margin-top:22px;background:#211522;border-radius:18px;padding:12px;box-shadow:var(--shadow)}
+    video{width:100%;display:block;border-radius:10px;background:#140d16}
+    .video-caption{display:flex;justify-content:space-between;gap:20px;padding:12px 5px 1px;color:#e6d9e4;font-size:11px}
+    .cap-muted{color:#ad9cad}
+    .use-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+    .use{padding:22px;border:1px solid var(--line);border-radius:15px;background:#fff}
+    .use-icon{width:35px;height:35px;border-radius:10px;background:var(--pale);display:grid;place-items:center;color:var(--pink-dark);font-size:17px;font-weight:800}
+    .use h3{font-size:16px;margin:16px 0 7px;letter-spacing:-.03em}
+    .use p{font-size:13px;color:var(--muted);margin:0}
+    .case{background:#fff}
+    .case-box{display:grid;grid-template-columns:.85fr 1.15fr;gap:36px;padding:34px;border:1px solid var(--line);border-radius:20px;background:linear-gradient(120deg,#fff,#fcf5fa)}
+    .case-box h3{font-size:26px;line-height:1.12;letter-spacing:-.05em;margin:13px 0}
+    .case-box p{font-size:13px;color:var(--muted)}
+    .case-items{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    .case-item{background:#fff;border:1px solid #eee2eb;border-radius:13px;padding:17px}
+    .case-item strong{display:block;color:var(--pink-dark);font-size:27px;letter-spacing:-.06em}
+    .case-item b{font-size:13px}.case-item p{font-size:11px;margin:7px 0 0}
+    .truth{background:#f6f0f5}
+    .truth-grid{display:grid;grid-template-columns:1fr 1fr;gap:13px}
+    .truth-item{background:#fff;border:1px solid var(--line);border-radius:13px;padding:17px 19px}
+    .truth-item b{font-size:13px;display:block;margin-bottom:5px}
+    .truth-item p{font-size:12px;color:var(--muted);margin:0}
+    .team{display:grid;grid-template-columns:1fr 1fr;gap:15px}
+    .person{border:1px solid var(--line);border-radius:15px;padding:22px;background:#fff}
+    .person h3{margin:0;font-size:19px;letter-spacing:-.04em}
+    .person .role{font-size:11px;color:var(--pink-dark);font-weight:800;margin:3px 0 13px}
+    .person p{font-size:12px;color:var(--muted);margin:0}
+    .cta{background:var(--plum);color:#fff;text-align:center;padding:78px 0}
+    .cta h2{font-size:clamp(35px,4.5vw,54px);line-height:1.05;letter-spacing:-.06em;max-width:730px;margin:14px auto}
+    .cta p{color:#d2c2d1;font-size:15px;max-width:550px;margin:0 auto 25px}
+    .cta .eyebrow{color:#f18bc6}
+    footer{padding:25px 0;color:#857887;font-size:11px}
+    .footer-inner{display:flex;justify-content:space-between;gap:20px;align-items:center}
+    .footer-brand{font-weight:850;color:var(--ink);letter-spacing:-.04em}
+    @media(max-width:850px){
+      .hero-grid{grid-template-columns:1fr;gap:45px}.hero{padding-top:52px}
+      .hero-visual{max-width:680px;margin:auto;width:100%}.problem-grid{grid-template-columns:1fr 1fr}
+      .statement-inner{display:block}.statement .aside{margin-top:18px;max-width:450px}
+      .case-box{grid-template-columns:1fr}.navlinks{gap:15px}
     }
-
-    .card {
-      padding: 40px;
-      border: 3px solid white;
-      border-radius: 24px;
-      background: rgba(0, 0, 0, 0.35);
-      backdrop-filter: blur(10px);
-      box-shadow: 0 20px 60px #0005;
-    }
-
-    h1 { font-size: 3rem; margin-bottom: 10px; }
-    .equation {
-      font-size: 2rem;
-      font-weight: 900;
-      margin: 30px 0;
-    }
-
-    .red { color: #ff5555; }
-    .green { color: #7cff7c; }
-    .magenta { color: #ff4dff; }
-
-    button {
-      padding: 14px 24px;
-      border: none;
-      border-radius: 30px;
-      font-size: 1rem;
-      font-weight: bold;
-      cursor: pointer;
-      background: white;
-      color: #d000a8;
+    @media(max-width:600px){
+      .wrap{width:min(100% - 34px,var(--max))}.nav{height:68px}.navlinks a:not(.button){display:none}
+      .navlinks{gap:0}.navlinks .button{padding:10px 14px;font-size:11px}
+      .hero{padding:42px 0 65px}h1{font-size:47px}.lead{font-size:16px}
+      section{padding:66px 0}.problem-grid,.steps,.product-grid,.use-grid,.truth-grid,.team{grid-template-columns:1fr}
+      .problem-card{padding:18px}.step{min-height:0}.step h3{margin-top:15px}
+      .floating{left:8px;bottom:-35px}.stats{gap:5px}.stat{padding:9px}.stat strong{font-size:17px}
+      .dash-row{font-size:8px;padding:9px 7px}.case-box{padding:22px}.case-items{grid-template-columns:1fr 1fr}
+      .video-caption{display:block}.video-caption span{display:block;margin-top:4px}
+      .footer-inner{align-items:flex-start;flex-direction:column}
     }
   </style>
 </head>
 <body>
-  <div class="card">
-    <h1>🧪 MAGENTA LAB</h1>
-    <p>Question everything. Especially colors.</p>
+  <header class="wrap nav">
+    <a class="brand" href="#" aria-label="Magenta home"><span class="mark"></span>magenta</a>
+    <nav class="navlinks" aria-label="Main navigation">
+      <a href="#how">How it works</a><a href="#product">Product</a><a href="#team">Team</a>
+      <a class="button primary" href="mailto:shabnum.gulati@gmail.com?subject=Magenta%20%E2%80%94%20Pilot%20inquiry">Talk to us <span>↗</span></a>
+    </nav>
+  </header>
 
-    <div class="equation">
-      <span class="red">RED</span>
-      +
-      <span class="green">GREEN</span>
-      =
-      <span class="magenta">MAGENTA</span>
-    </div>
+  <main>
+    <section class="hero">
+      <div class="wrap hero-grid">
+        <div>
+          <div class="eyebrow">AI-powered experimentation</div>
+          <h1>Know what your customers want <em>before</em> you ship.</h1>
+          <p class="lead">Magenta uses AI agents that emulate consumer behavior to evaluate product experiences before they reach real customers. Narrow the field, learn faster, and put live traffic behind the ideas worth testing.</p>
+          <div class="hero-actions">
+            <a class="button primary" href="#product">Explore the product <span>↗</span></a>
+            <a class="button ghost" href="#how">How it works <span>↓</span></a>
+          </div>
+          <p class="micro">Simulate first. Validate with real customers. Make better decisions.</p>
+        </div>
+        <div class="hero-visual">
+          <div class="dashboard">
+            <div class="dash-top"><div class="dash-brand"><span class="tiny-mark"></span>magenta <span style="font-weight:400;color:#9b8d9b">/ Experiments</span></div><span>Workspace&nbsp;&nbsp; · &nbsp;&nbsp;•••</span></div>
+            <div class="dash-body">
+              <div class="dash-title">Experiment overview</div><div class="dash-sub">A clearer view of what deserves real-world testing</div>
+              <div class="stats">
+                <div class="stat"><small>Agents simulated</small><strong>40,000</strong></div>
+                <div class="stat"><small>Variants evaluated</small><strong>04</strong></div>
+                <div class="stat"><small>Shortlisted</small><strong>02 <span>↓ 50%</span></strong></div>
+              </div>
+              <div class="dash-table">
+                <div class="dash-row head"><span>Variant</span><span>Persona lens</span><span>Evaluation</span><span>Status</span></div>
+                <div class="dash-row"><b>Control</b><span>Baseline</span><span>Compared</span><span class="pill">Reference</span></div>
+                <div class="dash-row"><b>One-page checkout</b><span>Fast path</span><span>Simulated</span><span class="pill">Candidate</span></div>
+                <div class="dash-row"><b>Guest checkout</b><span>Low friction</span><span>Simulated</span><span class="pill">Candidate</span></div>
+                <div class="dash-row"><b>Shipping cost upfront</b><span>Price clarity</span><span>Simulated</span><span class="pill pink">Review</span></div>
+              </div>
+              <div style="display:flex;justify-content:space-between;margin-top:13px;font-size:9px;color:#948795"><span>Illustrative product visualization</span><span>Simulation workspace ↗</span></div>
+            </div>
+          </div>
+          <div class="floating">A/B test planning<b>Focus live traffic on fewer ideas</b></div>
+        </div>
+      </div>
+    </section>
 
-    <p>Peer reviewed by absolutely nobody.</p>
-    <p>100% scientifically questionable.</p>
+    <section class="problem">
+      <div class="wrap">
+        <div class="section-head">
+          <div class="eyebrow">The problem</div>
+          <h2>Experimentation is valuable. It is also painfully slow.</h2>
+          <p>Consumer teams have more ideas than they can test. Every variant competes for traffic, time, and statistical power—and real customers experience every losing version along the way.</p>
+        </div>
+        <div class="problem-grid">
+          <article class="problem-card"><div class="num">01 / TRAFFIC</div><h3>Too many variants</h3><p>Every extra test arm needs more users. Teams end up guessing which ideas to cut before a test even starts.</p></article>
+          <article class="problem-card"><div class="num">02 / TIME</div><h3>Weeks to learn</h3><p>Small lifts need large samples. Tests and long-term holdouts can take weeks or months to settle.</p></article>
+          <article class="problem-card"><div class="num">03 / SIGNAL</div><h3>Metrics don't agree</h3><p>Clicks can rise while revenue and retention remain inconclusive. The metric that matters is often the hardest to move.</p></article>
+          <article class="problem-card"><div class="num">04 / CUSTOMERS</div><h3>Real users bear the cost</h3><p>People in a bad experience can churn or simply not come back. Learning has a customer cost.</p></article>
+        </div>
+      </div>
+    </section>
 
-    <button onclick="alert('Congratulations. You understand color theory now. 🎓')">
-      Verify Science
-    </button>
+    <div class="statement"><div class="wrap statement-inner"><h2>What if most losing variants never reached a real customer <span>in the first place?</span></h2><div class="aside">Magenta helps teams narrow the field before committing valuable live traffic.</div></div></div>
 
-    <p style="font-size: 12px; opacity: .7; margin-top: 25px">
-      © 2026 Magenta Institute of Alternative Physics
-    </p>
-  </div>
+    <section id="how">
+      <div class="wrap">
+        <div class="section-head">
+          <div class="eyebrow">How Magenta works</div>
+          <h2>From broad behavior to customer-level predictions.</h2>
+          <p>Start with a behavioral model, calibrate it against real outcomes, then build customer twins when the question calls for individual-level understanding.</p>
+        </div>
+        <div class="steps">
+          <article class="step"><div class="step-no">STEP 01</div><h3>Simulate</h3><p>Run generic behavioral personas through product experiences to compare variants, uncover friction, and identify promising directions.</p><span class="tag">Useful from day one</span></article>
+          <article class="step"><div class="step-no">STEP 1.5</div><h3>Calibrate</h3><p>Run agents and real users through the same experience. Measure the gap and tune the behavioral model against observed outcomes.</p><span class="tag">Ground predictions in reality</span></article>
+          <article class="step"><div class="step-no">STEP 02</div><h3>Build customer twins</h3><p>Use historical experiment logs to create agent twins of individual customers for questions aggregate personas cannot answer.</p><span class="tag">Individual-level insight</span></article>
+        </div>
+      </div>
+    </section>
+
+    <section class="product" id="product">
+      <div class="wrap">
+        <div class="section-head">
+          <div class="eyebrow">Inside the platform</div>
+          <h2>Design an experiment. Watch the agents. Understand the outcome.</h2>
+          <p>A workspace for configuring experiments, observing simulated journeys, comparing variants, and exploring customer-level behavior.</p>
+        </div>
+        <div class="product-grid">
+          <article class="product-card"><img src="assets/experiment-setup.jpg" alt="Magenta demo showing experiment setup and behavioral persona configuration"><div class="product-copy"><h3>Configure experiments</h3><p>Define variants, metrics, agent volume, and behavioral personas.</p></div></article>
+          <article class="product-card"><img src="assets/simulation.jpg" alt="Magenta demo showing simulated agent activity and experiment progress"><div class="product-copy"><h3>Observe simulated journeys</h3><p>Inspect agent activity and how different personas move through an experience.</p></div></article>
+          <article class="product-card"><img src="assets/results.jpg" alt="Magenta demo showing predicted conversion and variant comparison"><div class="product-copy"><h3>Compare the signal</h3><p>Review predicted conversion, drop-off patterns, and variant-level results.</p></div></article>
+          <article class="product-card"><img src="assets/customer-twins.jpg" alt="Magenta demo showing customer twin profiles and calibration"><div class="product-copy"><h3>Explore customer twins</h3><p>Understand how individual-level behavioral models can add context beyond aggregates.</p></div></article>
+        </div>
+        <div class="video-wrap">
+          <video controls playsinline preload="metadata" poster="assets/results.jpg">
+            <source src="assets/magenta-demo.mp4" type="video/mp4">
+            Your browser does not support embedded video.
+          </video>
+          <div class="video-caption"><b>See the product walkthrough</b><span class="cap-muted">A product concept demo · 1 minute</span></div>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <div class="wrap">
+        <div class="section-head"><div class="eyebrow">Beyond A/B testing</div><h2>One behavioral engine. Multiple ways to test.</h2><p>Use simulated agents to explore product experiences from different angles before and during development.</p></div>
+        <div class="use-grid">
+          <article class="use"><div class="use-icon">↗</div><h3>A/B simulation</h3><p>Narrow many variants down to the few worth putting in front of live traffic.</p></article>
+          <article class="use"><div class="use-icon">⌕</div><h3>QA testing</h3><p>Have agents exercise edge cases and product flows before customers do.</p></article>
+          <article class="use"><div class="use-icon">⇧</div><h3>Load testing</h3><p>Simulate large volumes of concurrent shoppers, including AI agents acting on people's behalf.</p></article>
+        </div>
+      </div>
+    </section>
+
+    <section class="case">
+      <div class="wrap">
+        <div class="section-head"><div class="eyebrow">A real-world lens</div><h2>Why individual behavior matters.</h2><p>The right answer is not always visible in aggregate data. Some product experiences depend on the history and preferences of each customer.</p></div>
+        <div class="case-box">
+          <div><div class="eyebrow">Facebook Dating · Founder experience</div><h3>Two features. Two different prediction challenges.</h3><p>From the team's experience working on Facebook Dating, aggregate personas can help reason about broad behavior, while customer twins can capture patterns that depend on an individual's history.</p></div>
+          <div class="case-items">
+            <div class="case-item"><strong>+5%</strong><b>Meet Cute · CDAU</b><p>Auto-matched two people once a week. Aggregate behavior can help estimate messaging propensity.</p></div>
+            <div class="case-item"><strong>+3%</strong><b>Second Chances · CDAU</b><p>Re-showed people a user had passed on. Individual history and candidate pools matter.</p></div>
+          </div>
+        </div>
+        <p class="micro">Historical feature outcomes cited in the founders' pitch materials; not results from Magenta simulations.</p>
+      </div>
+    </section>
+
+    <section class="truth">
+      <div class="wrap">
+        <div class="section-head"><div class="eyebrow">Built with the right expectations</div><h2>AI simulation is a complement to real-world testing.</h2><p>We are building toward more useful predictions—not claiming that simulated behavior replaces customers.</p></div>
+        <div class="truth-grid">
+          <div class="truth-item"><b>Human judgment still matters</b><p>Purely visual or subjective choices—like a red button versus a blue one—still need human testing.</p></div>
+          <div class="truth-item"><b>Data improves fidelity</b><p>Customer twins become useful when a company has enough historical experiment and behavioral data to calibrate them.</p></div>
+          <div class="truth-item"><b>Twins have a real cost</b><p>Individual-level twins are more expensive to run than aggregate personas. Reducing that cost is part of the R&amp;D challenge.</p></div>
+          <div class="truth-item"><b>Live validation remains essential</b><p>Magenta helps prioritize what to test. Real-world experiments remain the way to validate outcomes.</p></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="team">
+      <div class="wrap">
+        <div class="section-head"><div class="eyebrow">The team</div><h2>Built by people who have lived experimentation at scale.</h2></div>
+        <div class="team">
+          <article class="person"><h3>Shabnum Gulati</h3><div class="role">Co-founder &amp; CEO</div><p>Former Senior Staff PM and Consumer GenAI Lead at Netflix; Staff PM at Meta across Instagram, Threads, and Facebook; Senior PM at Honey.</p></article>
+          <article class="person"><h3>Yash Gazula</h3><div class="role">Co-founder &amp; CTO</div><p>Staff Software Engineer at Meta across Instagram, Threads, and Messenger; previously Senior Software Engineer at Tripadvisor.</p></article>
+        </div>
+      </div>
+    </section>
+
+    <section class="cta">
+      <div class="wrap">
+        <div class="eyebrow">Work with Magenta</div>
+        <h2>Spend less time testing ideas that were never going to work.</h2>
+        <p>We're talking with consumer product teams about the future of AI-powered experimentation. If you're exploring this problem, we'd love to hear from you.</p>
+        <a class="button primary" href="mailto:shabnum.gulati@gmail.com?subject=Magenta%20%E2%80%94%20Pilot%20inquiry">Get in touch <span>↗</span></a>
+      </div>
+    </section>
+  </main>
+
+  <footer><div class="wrap footer-inner"><div class="footer-brand">✳ magenta</div><div>AI customer simulation &amp; experimentation</div><div>© 2026 Magenta</div></div></footer>
 </body>
 </html>
